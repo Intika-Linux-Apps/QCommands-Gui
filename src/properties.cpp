@@ -115,6 +115,9 @@ void Properties::loadSettings()
     hideTabBarWithOneTab = m_settings->value("HideTabBarWithOneTab", false).toBool();
     m_motionAfterPaste = m_settings->value("MotionAfterPaste", 0).toInt();
 
+    /* Word characters */
+    wordCharacters = m_settings->value("TerminalWordCharacters", QString(":@-./_~")).toString();
+
     /* toggles */
     borderless = m_settings->value("Borderless", false).toBool();
     tabBarless = m_settings->value("TabBarless", false).toBool();
@@ -193,6 +196,7 @@ void Properties::saveSettings()
     m_settings->setValue("KeyboardCursorShape", keyboardCursorShape);
     m_settings->setValue("HideTabBarWithOneTab", hideTabBarWithOneTab);
     m_settings->setValue("MotionAfterPaste", m_motionAfterPaste);
+    m_settings->setValue("TerminalWordCharacters", wordCharacters);
     m_settings->setValue("Borderless", borderless);
     m_settings->setValue("TabBarless", tabBarless);
     m_settings->setValue("MenuVisible", menuVisible);

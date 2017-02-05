@@ -63,6 +63,8 @@ class Properties
         int termTransparency;
         QString backgroundImage;
 
+        QString wordCharacters;
+
         int scrollBarPos;
         int tabsPos;
         int keyboardCursorShape;

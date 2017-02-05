@@ -90,6 +90,9 @@ PropertiesDialog::PropertiesDialog(QWidget *parent)
     motionAfterPasting_comboBox->addItems(motionAfter);
     motionAfterPasting_comboBox->setCurrentIndex(Properties::Instance()->m_motionAfterPaste);
 
+    // word characters
+    wordCharactersLineEdit->setText(Properties::Instance()->wordCharacters);
+
     // Setting windows style actions
     styleComboBox->addItem(tr("System Default"));
     styleComboBox->addItems(QStyleFactory::keys());
@@ -181,6 +184,8 @@ void PropertiesDialog::apply()
     Properties::Instance()->hideTabBarWithOneTab = hideTabBarCheckBox->isChecked();
     Properties::Instance()->menuVisible = showMenuCheckBox->isChecked();
     Properties::Instance()->m_motionAfterPaste = motionAfterPasting_comboBox->currentIndex();
+
+    Properties::Instance()->wordCharacters = wordCharactersLineEdit->text();
 
     Properties::Instance()->historyLimited = historyLimited->isChecked();
     Properties::Instance()->historyLimitedTo = historyLimitedTo->value();

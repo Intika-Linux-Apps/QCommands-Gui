@@ -93,6 +93,8 @@ void TermWidgetImpl::propertiesChanged()
     setTerminalOpacity(1.0 - Properties::Instance()->termTransparency/100.0);
     setTerminalBackgroundImage(Properties::Instance()->backgroundImage);
 
+    setWordCharacters(Properties::Instance()->wordCharacters);
+
     /* be consequent with qtermwidget.h here */
     switch(Properties::Instance()->scrollBarPos) {
     case 0:
