@@ -24,6 +24,8 @@ elseif(UNIX)
 endif()
 find_package(QTermWidget5 REQUIRED)
 find_package(lxqt-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
+include(FindPkgConfig)
+pkg_check_modules(LIBCANBERRA libcanberra)
 include(LXQtTranslateTs)
 include(LXQtCompilerSettings NO_POLICY_SCOPE)
 message(STATUS "Qt version: ${Qt5Core_VERSION}")
@@ -193,6 +195,12 @@ endif()
 
 if(X11_FOUND)
     target_link_libraries(${EXE_NAME} ${X11_X11_LIB})
+endif()
+
+if(LIBCANBERRA_FOUND)
+    add_definitions(-DHAVE_LIBCANBERRA)
+    include_directories(${LIBCANBERRA_INCLUDE_DIRS})
+    target_link_libraries(${EXE_NAME} ${LIBCANBERRA_LIBRARIES})
 endif()
 
 

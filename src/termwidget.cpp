@@ -31,6 +31,9 @@
     #include "terminaladaptor.h"
 #endif
 
+#ifdef HAVE_LIBCANBERRA
+    #include <canberra.h>
+#endif
 
 #include "mainwindow.h"
 #include "termwidget.h"
@@ -43,6 +46,9 @@ static int TermWidgetCount = 0;
 
 TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
     : QTermWidget(0, parent)
+#ifdef HAVE_LIBCANBERRA
+    , libcanberra_context(nullptr)
+#endif
 {
     TermWidgetCount++;
     QString name("TermWidget_%1");
@@ -76,6 +82,7 @@ TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
             this, SLOT(customContextMenuCall(const QPoint &)));
 
     connect(this, &QTermWidget::urlActivated, this, &TermWidgetImpl::activateUrl);
+    connect(this, &QTermWidget::bell, this, &TermWidgetImpl::bell);
 
     startShellProgram();
 }
@@ -192,6 +199,19 @@ void TermWidgetImpl::activateUrl(const QUrl & url, bool fromContextMenu) {
     if (QApplication::keyboardModifiers() & Qt::ControlModifier || fromContextMenu) {
         QDesktopServices::openUrl(url);
     }
+}
+
+void TermWidgetImpl::bell() {
+#ifdef HAVE_LIBCANBERRA
+    if (!libcanberra_context) {
+        ca_context_create (&libcanberra_context);
+    }
+    ca_context_play (libcanberra_context, 0,
+                     CA_PROP_EVENT_ID, "bell",
+                     NULL);
+#else
+    qWarning() << "Bell! But QTerminal is not built with libcanberra, so there's no sound.";
+#endif
 }
 
 void TermWidgetImpl::pasteSelection()
