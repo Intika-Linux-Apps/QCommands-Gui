@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <unistd.h>
 #ifdef HAVE_QDBUS
     #include <QtDBus/QtDBus>
     #include <unistd.h>
@@ -114,6 +115,17 @@ void parse_args(int argc, char* argv[], QString& workdir, QString & shell_comman
 
 int main(int argc, char *argv[])
 {
+    // On macOS, if qterminal.app is spawned by launchd (e.g., from Finder or
+    // use `open qterminal.app`, $PWD is set to /. Workaround that by go to
+    // $HOME first
+    if (!qEnvironmentVariableIsEmpty("LAUNCHED_BY_LAUNCHD")) {
+        chdir(QDir::homePath().toLatin1().data());
+
+        QLocale systemLocale;
+        QString countryName(systemLocale.bcp47Name().replace(QLatin1Char('-'), QLatin1Char('_')));
+        setenv("LANG", (countryName + QStringLiteral(".UTF-8")).toLatin1().data(), 0);
+    }
+
     QApplication::setApplicationName(QStringLiteral("qterminal"));
     QApplication::setApplicationVersion(QStringLiteral(QTERMINAL_VERSION));
     QApplication::setOrganizationDomain(QStringLiteral("qterminal.org"));
@@ -168,8 +180,14 @@ int main(int argc, char *argv[])
     qDebug() << "load success:" << translator.load(fname, QString::fromUtf8(TRANSLATIONS_DIR), QStringLiteral("_"));
 #endif
 #ifdef APPLE_BUNDLE
-    qDebug() << "APPLE_BUNDLE: Loading translator file" << fname << "from dir" << QApplication::applicationDirPath()+"../translations";
-    qDebug() << "load success:" << translator.load(fname, QApplication::applicationDirPath()+"../translations", "_");
+    QDir translations_dir = QDir(QApplication::applicationDirPath());
+    translations_dir.cdUp();
+    if (translations_dir.cd(QStringLiteral("Resources/translations"))) {
+        qDebug() << "APPLE_BUNDLE: Loading translator file" << fname << "from dir" << translations_dir.path();
+        qDebug() << "load success:" << translator.load(fname, translations_dir.path(), QStringLiteral("_"));
+    } else {
+        qWarning() << "Unable to find \"Resources/translations\" dir in" << translations_dir.path();
+    }
 #endif
     app->installTranslator(&translator);
 
