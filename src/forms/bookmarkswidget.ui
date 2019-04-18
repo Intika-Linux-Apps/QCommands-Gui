@@ -26,9 +26,11 @@
    <property name="spacing">
     <number>1</number>
    </property>
+   <!-- 
    <item row="0" column="0" colspan="2">
     <widget class="QLineEdit" name="filterEdit"/>
    </item>
+   -->
    <item row="1" column="0" colspan="2">
     <widget class="QTreeView" name="treeView">
      <property name="alternatingRowColors">
