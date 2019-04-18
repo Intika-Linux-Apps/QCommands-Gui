@@ -28,8 +28,6 @@
 #define QUIT "Quit"
 #define PREFERENCES "Preferences..."
 
-#define TAB_PREV_HISTORY "Previous Tab in History"
-#define TAB_NEXT_HISTORY "Next Tab in History"
 #define TAB_NEXT "Next Tab"
 #define TAB_PREV "Previous Tab"
 
@@ -69,30 +67,22 @@
 
 #define DEFAULT_WIDTH                  800
 #define DEFAULT_HEIGHT                 600
-#ifdef Q_OS_MACOS
-// Qt does not support fontconfig on macOS, so we need to use a "real" font name.
-#define DEFAULT_FONT                   "Menlo"
-#else
 #define DEFAULT_FONT                   "Monospace"
-#endif
 
 // ACTIONS
 #define CLEAR_TERMINAL_SHORTCUT        "Ctrl+Shift+X"
 
-#define TAB_PREV_HISTORY_SHORTCUT  "Ctrl+Tab"
-#define TAB_NEXT_HISTORY_SHORTCUT  "Ctrl+Shift+Tab"
-#define TAB_PREV_SHORTCUT	       "Ctrl+PgUp"
-#define TAB_NEXT_SHORTCUT	       "Ctrl+PgDown"
+#define TAB_PREV_SHORTCUT	       "Ctrl+PgUp|Ctrl+Shift+Tab"
+#define TAB_NEXT_SHORTCUT	       "Ctrl+PgDown|Ctrl+Tab"
 #define SUB_BOTTOM_SHORTCUT	       "Alt+Down"
 #define SUB_TOP_SHORTCUT	       "Alt+Up"
 #define SUB_LEFT_SHORTCUT	       "Alt+Left"
 #define SUB_RIGHT_SHORTCUT	       "Alt+Right"
 
-#ifdef Q_OS_MACOS
+#ifdef Q_WS_MAC
 // It's tricky - Ctrl is "command" key on mac's keyboards
 #define COPY_SELECTION_SHORTCUT      "Ctrl+C"
 #define PASTE_CLIPBOARD_SHORTCUT      "Ctrl+V"
-#define PASTE_SELECTION_SHORTCUT      "Shift+Ins"
 #define FIND_SHORTCUT                "Ctrl+F"
 #define NEW_WINDOW_SHORTCUT          "Ctrl+N"
 #define ADD_TAB_SHORTCUT               "Ctrl+T"

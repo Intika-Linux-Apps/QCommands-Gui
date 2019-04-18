@@ -31,29 +31,24 @@
 #include "terminalconfig.h"
 #include "properties.h"
 
-class TabBar;
 class TermWidgetHolder;
 class QAction;
 class QActionGroup;
-class TabSwitcher;
+
 
 class TabWidget : public QTabWidget
 {
 Q_OBJECT
 public:
     TabWidget(QWidget* parent = 0);
-    ~TabWidget() override;
 
     TermWidgetHolder * terminalHolder();
 
     void showHideTabBar();
-    const QList<QWidget*>& history() const;
 
 public slots:
     int addNewTab(TerminalConfig cfg);
     void removeTab(int);
-    void switchTab(int);
-    void saveCurrentChanged(int);
     void removeCurrentTab();
     int switchToRight();
     int switchToLeft();
@@ -62,7 +57,6 @@ public slots:
     void moveRight();
     void renameSession(int);
     void renameCurrentSession();
-    void setTitleColor(int);
 
     void switchLeftSubterminal();
     void switchRightSubterminal();
@@ -94,24 +88,21 @@ public slots:
     void preset2Vertical();
     void preset4Terminals();
 
-    void switchToNext();
-    void switchToPrev();
 signals:
-    void closeTabNotification(bool);
+    void closeTabNotification();
     void tabRenameRequested(int);
-    void tabTitleColorChangeRequested(int);
     void currentTitleChanged(int);
 
 protected:
     enum Direction{Left = 1, Right};
-    void contextMenuEvent(QContextMenuEvent * event) override;
+    void contextMenuEvent(QContextMenuEvent * event);
     void move(Direction);
     /*! Event filter for TabWidget's QTabBar. It's installed on tabBar()
         in the constructor.
         It's purpose is to handle doubleclicks on QTabBar for session
         renaming or new tab opening
      */
-    bool eventFilter(QObject *obj, QEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event);
 protected slots:
     void updateTabIndices();
     void onTermTitleChanged(QString title, QString icon);
@@ -120,10 +111,6 @@ private:
     int tabNumerator;
     /* re-order naming of the tabs then removeCurrentTab() */
     void renameTabsAfterRemove();
-
-    TabBar *mTabBar;
-    QScopedPointer<TabSwitcher> mSwitcher;
-    QList<QWidget*> mHistory;
 };
 
 #endif

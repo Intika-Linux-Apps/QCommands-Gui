@@ -134,7 +134,7 @@ public:
     {
         QxtX11ErrorHandler errorHandler;
 
-        for (const quint32& maskMods :  qAsConst(maskModifiers)) {
+        foreach (quint32 maskMods, maskModifiers) {
             XUngrabKey(display(), keycode, modifiers | maskMods, window);
         }
 

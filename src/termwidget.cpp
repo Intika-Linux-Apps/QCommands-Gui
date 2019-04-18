@@ -45,7 +45,7 @@ TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
     : QTermWidget(0, parent)
 {
     TermWidgetCount++;
-    QString name(QStringLiteral("TermWidget_%1"));
+    QString name("TermWidget_%1");
     setObjectName(name.arg(TermWidgetCount));
 
     setFlowControlEnabled(FLOW_CONTROL_ENABLED);
@@ -61,7 +61,7 @@ TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
     if (!shell.isEmpty())
     {
         qDebug() << "Shell program:" << shell;
-        QStringList parts = shell.split(QRegExp(QStringLiteral("\\s+")), QString::SkipEmptyParts);
+        QStringList parts = shell.split(QRegExp("\\s+"), QString::SkipEmptyParts);
         qDebug() << parts;
         setShellProgram(parts.at(0));
         parts.removeAt(0);
@@ -72,8 +72,8 @@ TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
     setMotionAfterPasting(Properties::Instance()->m_motionAfterPaste);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QWidget::customContextMenuRequested,
-            this, &TermWidgetImpl::customContextMenuCall);
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+            this, SLOT(customContextMenuCall(const QPoint &)));
 
     connect(this, &QTermWidget::urlActivated, this, &TermWidgetImpl::activateUrl);
 
@@ -82,11 +82,9 @@ TermWidgetImpl::TermWidgetImpl(TerminalConfig &cfg, QWidget * parent)
 
 void TermWidgetImpl::propertiesChanged()
 {
-    setMargin(Properties::Instance()->terminalMargin);
     setColorScheme(Properties::Instance()->colorScheme);
     setTerminalFont(Properties::Instance()->font);
     setMotionAfterPasting(Properties::Instance()->m_motionAfterPaste);
-    setTerminalSizeHint(Properties::Instance()->showTerminalSizeHint);
 
     if (Properties::Instance()->historyLimited)
     {
@@ -101,7 +99,6 @@ void TermWidgetImpl::propertiesChanged()
     setKeyBindings(Properties::Instance()->emulation);
     setTerminalOpacity(1.0 - Properties::Instance()->termTransparency/100.0);
     setTerminalBackgroundImage(Properties::Instance()->backgroundImage);
-    setBidiEnabled(Properties::Instance()->enabledBidiSupport);
 
     /* be consequent with qtermwidget.h here */
     switch(Properties::Instance()->scrollBarPos) {
@@ -149,21 +146,21 @@ void TermWidgetImpl::customContextMenuCall(const QPoint & pos)
         menu.addSeparator();
     }
 
-    menu.addAction(actions[QStringLiteral(COPY_SELECTION)]);
-    menu.addAction(actions[QStringLiteral(PASTE_CLIPBOARD)]);
-    menu.addAction(actions[QStringLiteral(PASTE_SELECTION)]);
-    menu.addAction(actions[QStringLiteral(ZOOM_IN)]);
-    menu.addAction(actions[QStringLiteral(ZOOM_OUT)]);
-    menu.addAction(actions[QStringLiteral(ZOOM_RESET)]);
+    menu.addAction(actions[COPY_SELECTION]);
+    menu.addAction(actions[PASTE_CLIPBOARD]);
+    menu.addAction(actions[PASTE_SELECTION]);
+    menu.addAction(actions[ZOOM_IN]);
+    menu.addAction(actions[ZOOM_OUT]);
+    menu.addAction(actions[ZOOM_RESET]);
     menu.addSeparator();
-    menu.addAction(actions[QStringLiteral(CLEAR_TERMINAL)]);
-    menu.addAction(actions[QStringLiteral(SPLIT_HORIZONTAL)]);
-    menu.addAction(actions[QStringLiteral(SPLIT_VERTICAL)]);
+    menu.addAction(actions[CLEAR_TERMINAL]);
+    menu.addAction(actions[SPLIT_HORIZONTAL]);
+    menu.addAction(actions[SPLIT_VERTICAL]);
     // warning TODO/FIXME: disable the action when there is only one terminal
-    menu.addAction(actions[QStringLiteral(SUB_COLLAPSE)]);
+    menu.addAction(actions[SUB_COLLAPSE]);
     menu.addSeparator();
-    menu.addAction(actions[QStringLiteral(TOGGLE_MENU)]);
-    menu.addAction(actions[QStringLiteral(PREFERENCES)]);
+    menu.addAction(actions[TOGGLE_MENU]);
+    menu.addAction(actions[PREFERENCES]);
     menu.exec(mapToGlobal(pos));
 }
 
@@ -213,18 +210,18 @@ void TermWidgetImpl::paste(QClipboard::Mode mode)
     QString text = QApplication::clipboard()->text(mode);
     if ( ! text.isEmpty() )
     {
-        text.replace(QLatin1String("\r\n"), QLatin1String("\n"));
-        text.replace(QLatin1Char('\n'), QLatin1Char('\r'));
+        text.replace("\r\n", "\n");
+        text.replace('\n', '\r');
         QString trimmedTrailingNl(text);
-        trimmedTrailingNl.replace(QRegExp(QStringLiteral("\\r+$")), QString());
-        bool isMultiline = trimmedTrailingNl.contains(QLatin1Char('\r'));
+        trimmedTrailingNl.replace(QRegExp("\\r+$"), "");
+        bool isMultiline = trimmedTrailingNl.contains('\r');
         if (!isMultiline && Properties::Instance()->trimPastedTrailingNewlines)
         {
             text = trimmedTrailingNl;
         }
         if (Properties::Instance()->confirmMultilinePaste)
         {
-            if (text.contains(QLatin1Char('\r')) && Properties::Instance()->confirmMultilinePaste)
+            if (text.contains('\r') && Properties::Instance()->confirmMultilinePaste)
             {
                 QMessageBox confirmation(this);
                 confirmation.setWindowTitle(tr("Paste multiline text"));
@@ -232,8 +229,7 @@ void TermWidgetImpl::paste(QClipboard::Mode mode)
                 confirmation.setDetailedText(text);
                 confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
                 // Click "Show details..." to show those by default
-                const auto buttons = confirmation.buttons();
-                for( QAbstractButton * btn : buttons )
+                foreach( QAbstractButton * btn, confirmation.buttons() )
                 {
                     if (confirmation.buttonRole(btn) == QMessageBox::ActionRole && btn->text() == QMessageBox::tr("Show Details..."))
                     {
@@ -250,12 +246,17 @@ void TermWidgetImpl::paste(QClipboard::Mode mode)
             }
         }
 
-        bracketText(text);
+        /* TODO: Support bracketedPasteMode
+        if (bracketedPasteMode())
+        {
+            text.prepend("\e[200~");
+            text.append("\e[201~");
+        }*/
         sendText(text);
     }
 }
 
-bool TermWidget::eventFilter(QObject * /*obj*/, QEvent * ev)
+bool TermWidget::eventFilter(QObject * obj, QEvent * ev)
 {
     if (ev->type() == QEvent::MouseButtonPress)
     {
@@ -271,7 +272,7 @@ bool TermWidget::eventFilter(QObject * /*obj*/, QEvent * ev)
 
 TermWidget::TermWidget(TerminalConfig &cfg, QWidget * parent)
     : QWidget(parent),
-      DBusAddressable(QStringLiteral("/terminals"))
+      DBusAddressable("/terminals")
 {
 
     #ifdef HAVE_QDBUS
@@ -285,8 +286,7 @@ TermWidget::TermWidget(TerminalConfig &cfg, QWidget * parent)
     setLayout(m_layout);
 
     m_layout->addWidget(m_term);
-    const auto objs = m_term->children();
-    for (QObject *o : objs)
+    foreach (QObject *o, m_term->children())
     {
         // Find TerminalDisplay
         if (!o->isWidgetType() || qobject_cast<QWidget*>(o)->isHidden())
@@ -297,9 +297,9 @@ TermWidget::TermWidget(TerminalConfig &cfg, QWidget * parent)
 
     propertiesChanged();
 
-    connect(m_term, &QTermWidget::finished, this, &TermWidget::finished);
-    connect(m_term, &QTermWidget::termGetFocus, this, &TermWidget::term_termGetFocus);
-    connect(m_term, &QTermWidget::termLostFocus, this, &TermWidget::term_termLostFocus);
+    connect(m_term, SIGNAL(finished()), this, SIGNAL(finished()));
+    connect(m_term, SIGNAL(termGetFocus()), this, SLOT(term_termGetFocus()));
+    connect(m_term, SIGNAL(termLostFocus()), this, SLOT(term_termLostFocus()));
     connect(m_term, &QTermWidget::titleChanged, this, [this] { emit termTitleChanged(m_term->title(), m_term->icon()); });
 }
 

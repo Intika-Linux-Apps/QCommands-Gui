@@ -38,7 +38,7 @@
 TermWidgetHolder::TermWidgetHolder(TerminalConfig &config, QWidget * parent)
     : QWidget(parent)
       #ifdef HAVE_QDBUS
-      , DBusAddressable(QStringLiteral("/tabs"))
+      , DBusAddressable("/tabs")
       #endif
 {
     #ifdef HAVE_QDBUS
@@ -117,14 +117,12 @@ void TermWidgetHolder::loadSession()
 void TermWidgetHolder::saveSession(const QString & name)
 {
     Session dump;
-    QString num(QLatin1String("%1"));
-    const auto ws = findChildren<QSplitter*>();
-    for(QSplitter *w : ws)
+    QString num("%1");
+    foreach(QSplitter *w, findChildren<QSplitter*>())
     {
-        dump += QLatin1Char('|') + num.arg(w->orientation());
-        const auto sizes = w->sizes();
-        for (const int i : sizes)
-            dump += QLatin1Char(',') + num.arg(i);
+        dump += '|' + num.arg(w->orientation());
+        foreach (int i, w->sizes())
+            dump += ',' + num.arg(i);
     }
     Properties::Instance()->sessions[name] = dump;
     qDebug() << "dump" << dump;
@@ -200,7 +198,7 @@ void TermWidgetHolder::directionalNavigation(NavigationDirection dir) {
     // Find an active widget
     QList<TermWidget*> l = findChildren<TermWidget*>();
     int ix = -1;
-    for (TermWidget * w : qAsConst(l))
+    foreach (TermWidget * w, l)
     {
         ++ix;
         if (w->impl()->hasFocus())
@@ -232,7 +230,7 @@ void TermWidgetHolder::directionalNavigation(NavigationDirection dir) {
     int lowestX = INT_MAX;
     int lowestMidpointDistance = INT_MAX;
     TermWidget *fittest = NULL;
-    for (TermWidget * w : qAsConst(l))
+    foreach (TermWidget * w, l) 
     {
         NavigationData contenderDims = getNormalizedDimensions(w, dir);
         int midpointDistance = std::min(
@@ -262,8 +260,7 @@ void TermWidgetHolder::clearActiveTerminal()
 
 void TermWidgetHolder::propertiesChanged()
 {
-    const auto ws = findChildren<TermWidget*>();
-    for(TermWidget *w : ws)
+    foreach(TermWidget *w, findChildren<TermWidget*>())
         w->propertiesChanged();
 }
 
@@ -360,17 +357,19 @@ TermWidget *TermWidgetHolder::newTerm(TerminalConfig &cfg)
 {
     TermWidget *w = new TermWidget(cfg, this);
     // proxy signals
-    connect(w, &TermWidget::renameSession, this, &TermWidgetHolder::renameSession);
-    connect(w, &TermWidget::removeCurrentSession, this, &TermWidgetHolder::lastTerminalClosed);
-    connect(w, &TermWidget::finished, this, &TermWidgetHolder::handle_finished);
+    connect(w, SIGNAL(renameSession()), this, SIGNAL(renameSession()));
+    connect(w, SIGNAL(removeCurrentSession()), this, SIGNAL(lastTerminalClosed()));
+    connect(w, SIGNAL(finished()), this, SLOT(handle_finished()));
     // consume signals
 
-    connect(w, static_cast<void (TermWidget::*)(TermWidget *self)>(&TermWidget::splitHorizontal),
-            this, &TermWidgetHolder::splitHorizontal);
-    connect(w, static_cast<void (TermWidget::*)(TermWidget *self)>(&TermWidget::splitVertical),
-            this, &TermWidgetHolder::splitVertical);
-    connect(w, &TermWidget::splitCollapse, this, &TermWidgetHolder::splitCollapse);
-    connect(w, &TermWidget::termGetFocus, this, &TermWidgetHolder::setCurrentTerminal);
+    connect(w, SIGNAL(splitHorizontal(TermWidget *)),
+            this, SLOT(splitHorizontal(TermWidget *)));
+    connect(w, SIGNAL(splitVertical(TermWidget *)),
+            this, SLOT(splitVertical(TermWidget *)));
+    connect(w, SIGNAL(splitCollapse(TermWidget *)),
+            this, SLOT(splitCollapse(TermWidget *)));
+    connect(w, SIGNAL(termGetFocus(TermWidget *)),
+            this, SLOT(setCurrentTerminal(TermWidget *)));
     connect(w, &TermWidget::termTitleChanged, this, &TermWidgetHolder::onTermTitleChanged);
 
     return w;
@@ -424,8 +423,7 @@ QDBusObjectPath TermWidgetHolder::getActiveTerminal()
 QList<QDBusObjectPath> TermWidgetHolder::getTerminals()
 {
     QList<QDBusObjectPath> terminals;
-    const auto ws = findChildren<TermWidget*>();
-    for (TermWidget* w : ws)
+    foreach (TermWidget* w, findChildren<TermWidget*>())
     {
         terminals.push_back(w->getDbusPath());
     }

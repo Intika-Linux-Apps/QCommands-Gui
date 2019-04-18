@@ -52,7 +52,7 @@ QTerminalApp * QTerminalApp::m_instance = NULL;
 
 void print_usage_and_exit(int code)
 {
-    printf("QTerminal %s\n", QTERMINAL_VERSION);
+    printf("QTerminal %s\n", STR_VERSION);
     puts("Usage: qterminal [OPTION]...\n");
     puts("  -d,  --drop               Start in \"dropdown mode\" (like Yakuake or Tilda)");
     puts("  -e,  --execute <command>  Execute command instead of shell");
@@ -60,14 +60,14 @@ void print_usage_and_exit(int code)
     puts("  -p,  --profile            Load qterminal with specific options");
     puts("  -v,  --version            Prints application version and exits");
     puts("  -w,  --workdir <dir>      Start session with specified work directory");
-    puts("\nHomepage: <https://github.com/lxqt/qterminal>");
-    puts("Report bugs to <https://github.com/lxqt/qterminal/issues>");
+    puts("\nHomepage: <https://github.com/lxde/qterminal>");
+    puts("Report bugs to <https://github.com/lxde/qterminal/issues>");
     exit(code);
 }
 
 void print_version_and_exit(int code=0)
 {
-    printf("%s\n", QTERMINAL_VERSION);
+    printf("%s\n", STR_VERSION);
     exit(code);
 }
 
@@ -81,32 +81,29 @@ void parse_args(int argc, char* argv[], QString& workdir, QString & shell_comman
         {
             case 'h':
                 print_usage_and_exit(0);
-                break;
             case 'w':
-                workdir = QString::fromLocal8Bit(optarg);
+                workdir = QString(optarg);
                 break;
             case 'e':
-                shell_command = QString::fromLocal8Bit(optarg);
+                shell_command = QString(optarg);
                 // #15 "Raw" -e params
                 // Passing "raw" params (like konsole -e mcedit /tmp/tmp.txt") is more preferable - then I can call QString("qterminal -e ") + cmd_line in other programs
                 while (optind < argc)
                 {
                     //printf("arg: %d - %s\n", optind, argv[optind]);
-                    shell_command += QLatin1Char(' ') + QString::fromLocal8Bit(argv[optind++]);
+                    shell_command += ' ' + QString(argv[optind++]);
                 }
                 break;
             case 'd':
                 dropMode = true;
                 break;
             case 'p':
-                Properties::Instance(QString::fromLocal8Bit(optarg));
+                Properties::Instance(QString(optarg));
                 break;
             case '?':
                 print_usage_and_exit(1);
-                break;
             case 'v':
                 print_version_and_exit();
-                break;
         }
     }
     while(next_option != -1);
@@ -114,9 +111,11 @@ void parse_args(int argc, char* argv[], QString& workdir, QString & shell_comman
 
 int main(int argc, char *argv[])
 {
-    QApplication::setApplicationName(QStringLiteral("qterminal"));
-    QApplication::setApplicationVersion(QStringLiteral(QTERMINAL_VERSION));
-    QApplication::setOrganizationDomain(QStringLiteral("qterminal.org"));
+    setenv("TERM", "xterm", 1); // TODO/FIXME: why?
+
+    QApplication::setApplicationName("qterminal");
+    QApplication::setApplicationVersion(STR_VERSION);
+    QApplication::setOrganizationDomain("qterminal.org");
 #if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
     QApplication::setDesktopFileName(QLatin1String("qterminal.desktop"));
 #endif
@@ -132,11 +131,6 @@ int main(int argc, char *argv[])
     bool dropMode;
     parse_args(argc, argv, workdir, shell_command, dropMode);
 
-    Properties::Instance()->migrate_settings();
-    Properties::Instance()->loadSettings();
-
-    qputenv("TERM", Properties::Instance()->term.toLatin1());
-
     if (workdir.isEmpty())
         workdir = QDir::currentPath();
     app->setWorkingDirectory(workdir);
@@ -144,7 +138,7 @@ int main(int argc, char *argv[])
     const QSettings settings;
     const QFileInfo customStyle = QFileInfo(
         QFileInfo(settings.fileName()).canonicalPath() +
-        QStringLiteral("/style.qss")
+        "/style.qss"
     );
     if (customStyle.isFile() && customStyle.isReadable())
     {
@@ -158,14 +152,14 @@ int main(int argc, char *argv[])
     /* setup our custom icon theme if there is no system theme (OS X, Windows) */
     QCoreApplication::instance()->setAttribute(Qt::AA_UseHighDpiPixmaps); //Fix for High-DPI systems
     if (QIcon::themeName().isEmpty())
-        QIcon::setThemeName(QStringLiteral("QTerminal"));
+        QIcon::setThemeName("QTerminal");
 
     // translations
-    QString fname = QString::fromLatin1("qterminal_%1.qm").arg(QLocale::system().name().left(5));
+    QString fname = QString("qterminal_%1.qm").arg(QLocale::system().name().left(5));
     QTranslator translator;
 #ifdef TRANSLATIONS_DIR
     qDebug() << "TRANSLATIONS_DIR: Loading translation file" << fname << "from dir" << TRANSLATIONS_DIR;
-    qDebug() << "load success:" << translator.load(fname, QString::fromUtf8(TRANSLATIONS_DIR), QStringLiteral("_"));
+    qDebug() << "load success:" << translator.load(fname, TRANSLATIONS_DIR, "_");
 #endif
 #ifdef APPLE_BUNDLE
     qDebug() << "APPLE_BUNDLE: Loading translator file" << fname << "from dir" << QApplication::applicationDirPath()+"../translations";
@@ -196,8 +190,6 @@ MainWindow *QTerminalApp::newWindow(bool dropMode, TerminalConfig &cfg)
     else
     {
         window = new MainWindow(cfg, dropMode);
-        if (Properties::Instance()->windowMaximized)
-            window->setWindowState(Qt::WindowMaximized);
         window->show();
     }
     return window;
@@ -269,13 +261,13 @@ void QTerminalApp::registerOnDbus()
         return;
     }
     new ProcessAdaptor(this);
-    QDBusConnection::sessionBus().registerObject(QStringLiteral("/"), this);
+    QDBusConnection::sessionBus().registerObject("/", this);
 }
 
 QList<QDBusObjectPath> QTerminalApp::getWindows()
 {
     QList<QDBusObjectPath> windows;
-    for (MainWindow *wnd : qAsConst(m_windowList))
+    foreach (MainWindow *wnd, m_windowList)
     {
         windows.push_back(wnd->getDbusPath());
     }

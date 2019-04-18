@@ -75,7 +75,7 @@ public:
         : AbstractBookmarkItem()
     {
         m_type = AbstractBookmarkItem::Root;
-        m_value = m_display = QStringLiteral("root");
+        m_value = m_display = "root";
     }
 };
 
@@ -123,7 +123,7 @@ public:
         QDir d;
 
         // standard $HOME subdirs
-        for (const QStandardPaths::StandardLocation i : qAsConst(locations))
+        foreach (QStandardPaths::StandardLocation i, locations)
         {
             path = QStandardPaths::writableLocation(i);
             if (!d.exists(path))
@@ -132,24 +132,23 @@ public:
             }
             name = QStandardPaths::displayName(i);
 
-            path.replace(QLatin1String(" "), QLatin1String("\\ "));
-            cmd = QLatin1String("cd ") + path;
+            path.replace(" ", "\\ ");
+            cmd = "cd " + path;
 
             addChild(new BookmarkCommandItem(name, cmd, this));
         }
 
         // system env - include dirs in the tree
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        const auto keys = env.keys();
-        for (const QString &i : keys)
+        foreach (const QString &i, env.keys())
         {
             path = env.value(i);
             if (!d.exists(path) || !QFileInfo(path).isDir())
             {
                 continue;
             }
-            path.replace(QLatin1String(" "), QLatin1String("\\ "));
-            cmd = QLatin1String("cd ") + path;
+            path.replace(" ", "\\ ");
+            cmd = "cd " + path;
             addChild(new BookmarkCommandItem(i, cmd, this));
         }
     }
@@ -170,7 +169,7 @@ public:
         QFile f(fname);
         if (!f.open(QIODevice::ReadOnly))
         {
-            qDebug() << "Cannot open file" << fname;
+            qDebug() << "Canot open file" << fname;
             // TODO/FIXME: message box
             return;
         }
@@ -188,9 +187,9 @@ public:
             {
                 AbstractBookmarkItem *parent = m_map.contains(xmlPos()) ? m_map[xmlPos()] : this;
                 QString tag = xml.name().toString();
-                if (tag == QLatin1String("group"))
+                if (tag == "group")
                 {
-                    QString name = xml.attributes().value(QLatin1String("name")).toString();
+                    QString name = xml.attributes().value("name").toString();
                     m_pos.append(name);
 
                     BookmarkGroupItem *i = new BookmarkGroupItem(name, parent);
@@ -198,10 +197,10 @@ public:
 
                     m_map[xmlPos()] = i;
                 }
-                else if (tag == QLatin1String("command"))
+                else if (tag == "command")
                 {
-                    QString name = xml.attributes().value(QLatin1String("name")).toString();
-                    QString cmd = xml.attributes().value(QLatin1String("value")).toString();
+                    QString name = xml.attributes().value("name").toString();
+                    QString cmd = xml.attributes().value("value").toString();
 
                     BookmarkCommandItem *i = new BookmarkCommandItem(name, cmd, parent);
                     parent->addChild(i);
@@ -211,7 +210,7 @@ public:
             case QXmlStreamReader::EndElement:
             {
                 QString tag = xml.name().toString();
-                if (tag == QLatin1String("group"))
+                if (tag == "group")
                 {
                     m_pos.removeLast();
                 }
@@ -233,7 +232,7 @@ public:
 
     QString xmlPos()
     {
-        return m_pos.join(QLatin1Char('.'));
+        return m_pos.join(".");
     }
 };
 
@@ -302,8 +301,8 @@ AbstractBookmarkItem *BookmarksModel::getItem(const QModelIndex &index) const
     return m_root;
  }
 
-QVariant BookmarksModel::headerData(int /*section*/, Qt::Orientation /*orientation*/,
-                                    int /*role*/) const
+QVariant BookmarksModel::headerData(int section, Qt::Orientation orientation,
+                                    int role) const
 {
     return QVariant();
 }
@@ -370,8 +369,8 @@ BookmarksWidget::BookmarksWidget(QWidget *parent)
     treeView->setModel(m_model);
     treeView->header()->hide();
 
-    connect(treeView, &QTreeView::doubleClicked,
-            this, &BookmarksWidget::handleCommand);
+    connect(treeView, SIGNAL(doubleClicked(QModelIndex)),
+            this, SLOT(handleCommand(QModelIndex)));
 }
 
 BookmarksWidget::~BookmarksWidget()
@@ -393,5 +392,5 @@ void BookmarksWidget::handleCommand(const QModelIndex& index)
     if (!item || item->type() != AbstractBookmarkItem::Command)
         return;
 
-    emit callCommand(item->value() + QLatin1Char('\n')); // TODO/FIXME: decide how to handle EOL
+    emit callCommand(item->value() + "\n"); // TODO/FIXME: decide how to handle EOL
 }

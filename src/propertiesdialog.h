@@ -19,35 +19,7 @@
 #ifndef PROPERTIESDIALOG_H
 #define PROPERTIESDIALOG_H
 
-#include <QStyledItemDelegate>
-#include <QKeySequenceEdit>
 #include "ui_propertiesdialog.h"
-
-class KeySequenceEdit : public QKeySequenceEdit
-{
-    Q_OBJECT
-
-public:
-    KeySequenceEdit(QWidget *parent = nullptr) : QKeySequenceEdit(parent) {}
-
-    // to be used with Tab and Backtab
-    void pressKey(QKeyEvent *event) {
-        QKeySequenceEdit::keyPressEvent(event);
-    }
-};
-
-class Delegate : public QStyledItemDelegate
-{
-    Q_OBJECT
-
-public:
-    Delegate (QObject *parent = 0);
-
-    virtual QWidget* createEditor(QWidget *parent,
-                                  const QStyleOptionViewItem&,
-                                  const QModelIndex&) const;
-    virtual bool eventFilter(QObject *object, QEvent *event);
-};
 
 class PropertiesDialog : public QDialog, Ui::PropertiesDialog
 {
@@ -70,7 +42,7 @@ class PropertiesDialog : public QDialog, Ui::PropertiesDialog
     private slots:
         void apply();
         void accept();
-
+        
         void changeFontButton_clicked();
         void chooseBackgroundImageButton_clicked();
         void bookmarksButton_clicked();
@@ -78,6 +50,8 @@ class PropertiesDialog : public QDialog, Ui::PropertiesDialog
     protected:
         void setupShortcuts();
         void saveShortcuts();
+        void recordAction(int row, int column);
+        void validateAction(int row, int column);
 };
 
 

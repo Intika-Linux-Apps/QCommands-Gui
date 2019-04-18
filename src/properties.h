@@ -50,7 +50,6 @@ class Properties
         QString colorScheme;
         QString guiStyle;
         bool highlightCurrentTerminal;
-        bool showTerminalSizeHint;
 
         bool historyLimited;
         unsigned historyLimitedTo;
@@ -59,7 +58,6 @@ class Properties
 
         Sessions sessions;
 
-        int terminalMargin;
         int appTransparency;
         int termTransparency;
         QString backgroundImage;
@@ -69,11 +67,6 @@ class Properties
         int keyboardCursorShape;
         bool hideTabBarWithOneTab;
         int m_motionAfterPaste;
-
-        bool fixedTabWidth;
-        int fixedTabWidthValue;
-
-        bool showCloseTabButton;
 
         bool borderless;
         bool tabBarless;
@@ -85,8 +78,6 @@ class Properties
         bool savePosOnExit;
 
         bool useCWD;
-
-        QString term;
 
         bool useBookmarks;
         bool bookmarksVisible;
@@ -102,12 +93,9 @@ class Properties
 
         bool changeWindowTitle;
         bool changeWindowIcon;
-        bool enabledBidiSupport;
 
         bool confirmMultilinePaste;
         bool trimPastedTrailingNewlines;
-
-        bool windowMaximized;
 
 
     private:

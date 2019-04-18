@@ -1,38 +1,30 @@
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
-# CMP0000: Call the cmake_minimum_required() command at the beginning of the top-level
-# CMakeLists.txt file even before calling the project() command.
-# The cmake_minimum_required(VERSION) command implicitly invokes the cmake_policy(VERSION)
-# command to specify that the current project code is written for the given range of CMake
-# versions.
+cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
+
 project(qterminal)
 
 include(GNUInstallDirs)
 
 # qterminal version
-set(QTERMINAL_VERSION "0.14.1")
+set(STR_VERSION "0.8.0")
+set(LXQTBT_MINIMUM_VERSION "0.4.0")
 
 option(UPDATE_TRANSLATIONS "Update source translation translations/*.ts files" OFF)
 
-# we need qpa/qplatformnativeinterface.h for global shortcut
-
-# Minimum Versions
-set(LXQTBT_MINIMUM_VERSION "0.6.0")
-set(QTERMWIDGET_MINIMUM_VERSION "0.14.1")
-set(QT_MINIMUM_VERSION "5.7.1")
-
-find_package(Qt5Gui ${QT_MINIMUM_VERSION} REQUIRED)
-find_package(Qt5LinguistTools ${QT_MINIMUM_VERSION} REQUIRED)
-find_package(Qt5Widgets ${QT_MINIMUM_VERSION} REQUIRED)
-if(UNIX)
-    find_package(Qt5DBus ${QT_MINIMUM_VERSION} REQUIRED)
-    if (NOT APPLE)
-        find_package(Qt5X11Extras ${QT_MINIMUM_VERSION} REQUIRED)
-    endif (NOT APPLE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
-find_package(QTermWidget5 ${QTERMWIDGET_MINIMUM_VERSION} REQUIRED)
-find_package(lxqt-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
 
-include(LXQtPreventInSourceBuilds)
+# we need qpa/qplatformnativeinterface.h for global shortcut
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5LinguistTools REQUIRED)
+if(APPLE)
+elseif(UNIX)
+    find_package(Qt5X11Extras REQUIRED)
+    find_package(Qt5DBus)
+endif()
+find_package(QTermWidget5 REQUIRED)
+find_package(lxqt-build-tools ${LXQTBT_MINIMUM_VERSION} REQUIRED)
 include(LXQtTranslateTs)
 include(LXQtCompilerSettings NO_POLICY_SCOPE)
 message(STATUS "Qt version: ${Qt5Core_VERSION}")
@@ -50,16 +42,13 @@ elseif(UNIX)
    message(STATUS "X11_X11_LIB: ${X11_X11_LIB}")
 endif()
 
-add_definitions(
-    -DQTERMINAL_VERSION=\"${QTERMINAL_VERSION}\"
-)
+add_definitions(-DSTR_VERSION=\"${STR_VERSION}\")
 
 set(EXE_NAME qterminal)
 
 set(QTERM_SRC
     src/main.cpp
     src/mainwindow.cpp
-    src/tabbar.cpp
     src/tabwidget.cpp
     src/termwidget.cpp
     src/termwidgetholder.cpp
@@ -69,21 +58,19 @@ set(QTERM_SRC
     src/bookmarkswidget.cpp
     src/fontdialog.cpp
     src/dbusaddressable.cpp
-    src/tab-switcher.cpp
 )
 
 set(QTERM_MOC_SRC
     src/qterminalapp.h
     src/mainwindow.h
-    src/tabbar.h
     src/tabwidget.h
     src/termwidget.h
     src/termwidgetholder.h
     src/propertiesdialog.h
     src/bookmarkswidget.h
     src/fontdialog.h
-    src/tab-switcher.h
 )
+
 
 if (Qt5DBus_FOUND)
     add_definitions(-DHAVE_QDBUS)
@@ -130,6 +117,14 @@ lxqt_translate_ts(QTERM_QM
         ${QTERM_UI_SRC}
         ${QTERM_MOC_SRC}
     TRANSLATION_DIR "src/translations"
+    PULL_TRANSLATIONS
+        ${PULL_TRANSLATIONS}
+    CLEAN_TRANSLATIONS
+        ${CLEAN_TRANSLATIONS}
+    TRANSLATIONS_REPO
+        ${TRANSLATIONS_REPO}
+    TRANSLATIONS_REFSPEC
+        ${TRANSLATIONS_REFSPEC}
 )
 
 include_directories(
@@ -152,12 +147,12 @@ if(APPLEBUNDLE)
 
     # create Info.plist file
     set(MACOSX_BUNDLE_ICON_FILE qterminal.icns)
-    set(MACOSX_BUNDLE_INFO_STRING "QTerminal ${QTERMINAL_VERSION}")
+    set(MACOSX_BUNDLE_INFO_STRING "QTerminal ${STR_VERSION}")
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.qterminal")
-    set(MACOSX_BUNDLE_LONG_VERSION_STRING "${QTERMINAL_VERSION}")
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "${STR_VERSION}")
     set(MACOSX_BUNDLE_BUNDLE_NAME "${EXE_NAME}")
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${QTERMINAL_VERSION}")
-    set(MACOSX_BUNDLE_BUNDLE_VERSION "${QTERMINAL_VERSION}")
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${STR_VERSION}")
+    set(MACOSX_BUNDLE_BUNDLE_VERSION "${STR_VERSION}")
     set(MACOSX_BUNDLE_COPYRIGHT "(c) Petr Vanek &lt;petr@yarpen.cz&gt;")
 
     set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/macosx/qterminal.icns"
@@ -178,16 +173,6 @@ add_executable(${EXE_NAME} ${GUI_TYPE}
     ${APPLE_BUNDLE_SOURCES}
     ${QTERM_QM}
 )
-
-target_compile_definitions(${EXE_NAME}
-    PRIVATE
-        "QT_USE_QSTRINGBUILDER"
-        "QT_NO_CAST_FROM_ASCII"
-        "QT_NO_CAST_TO_ASCII"
-        "QT_NO_URL_CAST_FROM_STRING"
-        "QT_NO_CAST_FROM_BYTEARRAY"
-)
-
 target_link_libraries(${EXE_NAME}
     Qt5::Gui
     qtermwidget5
