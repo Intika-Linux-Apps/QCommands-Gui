@@ -79,6 +79,10 @@ MainWindow::MainWindow(TerminalConfig &cfg,
     BookmarksWidget *bookmarksWidget = new BookmarksWidget(m_bookmarksDock);
     bookmarksWidget->setAutoFillBackground(true);
     m_bookmarksDock->setWidget(bookmarksWidget);
+          
+    // Disable close button
+    m_bookmarksDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
+          
     addDockWidget(Qt::LeftDockWidgetArea, m_bookmarksDock);
     connect(bookmarksWidget, SIGNAL(callCommand(QString)),
             this, SLOT(bookmarksWidget_callCommand(QString)));
@@ -609,7 +613,7 @@ void MainWindow::propertiesChanged()
     {
         qobject_cast<BookmarksWidget*>(m_bookmarksDock->widget())->setup();
     }
-
+    
     onCurrentTitleChanged(consoleTabulator->currentIndex());
 
     realign();

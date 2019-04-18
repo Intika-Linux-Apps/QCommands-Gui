@@ -164,7 +164,7 @@ class BookmarkFileGroupItem : public BookmarkGroupItem
 
 public:
     BookmarkFileGroupItem(AbstractBookmarkItem *parent, const QString &fname)
-        : BookmarkGroupItem(QObject::tr("Synchronized Bookmarks"), parent)
+        : BookmarkGroupItem(QObject::tr("Commands"), parent)
     {
         QFile f(fname);
         if (!f.open(QIODevice::ReadOnly))
@@ -249,7 +249,7 @@ void BookmarksModel::setup()
     if (m_root)
         delete m_root;
     m_root = new BookmarkRootItem();
-    m_root->addChild(new BookmarkLocalGroupItem(m_root));
+    //m_root->addChild(new BookmarkLocalGroupItem(m_root));
     m_root->addChild(new BookmarkFileGroupItem(m_root, Properties::Instance()->bookmarksFile));
     beginResetModel();
     endResetModel();
