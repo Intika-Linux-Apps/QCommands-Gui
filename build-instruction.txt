@@ -1,1 +1,2 @@
-cmake_qt5 -DPULL_TRANSLATIONS=NO
+mkdir build; cd build
+cmake ../ -DPULL_TRANSLATIONS=NO
