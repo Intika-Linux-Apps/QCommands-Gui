@@ -83,6 +83,9 @@ MainWindow::MainWindow(TerminalConfig &cfg,
     // Disable close button
     m_bookmarksDock->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetMovable);
           
+    // Remove title bar
+    m_bookmarksDock->setTitleBarWidget(new QWidget());
+          
     addDockWidget(Qt::LeftDockWidgetArea, m_bookmarksDock);
     connect(bookmarksWidget, SIGNAL(callCommand(QString)),
             this, SLOT(bookmarksWidget_callCommand(QString)));
